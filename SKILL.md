@@ -14,15 +14,25 @@ Toolkit pentru generat link-uri Mermaid partajabile public, fara auth, fara stor
 - Pasi unui alt agent (Hermes, Claude, etc.) referinta vizuala la o diagrama deja generata
 - Embed intr-o nota Obsidian sub forma de link in afara de blocul ` ```mermaid `
 
+## Configurare host
+
+Skill-ul scoate URL-uri spre orice instanta de mermaid-live-editor. Setat via env var:
+
+```bash
+export MERMAID_HOST=mermaid.live              # default — instanta publica oficiala
+export MERMAID_HOST=mermaid.wisedigital.tech  # instanta wisedigital (intern firma)
+```
+
+Daca nu setezi nimic, URL-urile pleaca spre `mermaid.live` (zero infra dependency).
+
 ## Contract
 
-Editorul accepta starea diagramei encodata in fragmentul URL. Format minim:
+Editorul accepta starea diagramei encodata in fragmentul URL. Doua formate:
 
-```
-https://mermaid.wisedigital.tech/view#base64:<base64url(JSON state)>
-```
+- `#base64:<base64url(JSON state)>` — JSON-ul direct base64-encodat. Merge la diagrame mici, dar **esueaza la diagrame lungi** (Loading URL failed). Suportat doar pentru retro-compat.
+- `#pako:<base64url(zlib.compress(JSON state))>` — JSON-ul zlib-comprimat apoi base64. **Recomandat** — URL-uri ~3-5x mai scurte si suporta diagrame mari.
 
-Unde `JSON state` e:
+`JSON state`:
 
 ```json
 {"code":"<cod mermaid>","mermaid":"{\"theme\":\"default\"}","autoSync":true,"updateDiagram":true}
@@ -30,34 +40,40 @@ Unde `JSON state` e:
 
 `base64url` = base64 standard cu `+/` inlocuit cu `-_`, fara padding `=`.
 
-`/view` e public. `/edit` e in spatele Cloudflare Access (doar florin@wisedigital.tech). Linkurile generate aici se deschid in modul view, oricine cu URL-ul le vede.
+`/view` e public. `/edit` (pe instanta wisedigital) e in spatele Cloudflare Access — `@wisedigital.tech`. Linkurile generate aici se deschid in modul view, oricine cu URL-ul le vede.
 
-## Optiunea 1 — script (recomandat daca esti pe Mac-ul florin, sau ai sincronizat folderul)
+## Optiunea 1 — script (recomandat)
 
 ```bash
 echo 'flowchart LR
   A --> B' | ./mermaid-url.sh
 ```
 
-Iesire: URL gata de copy/paste.
+Iesire: URL `https://$MERMAID_HOST/view#pako:...` gata de copy/paste.
 
-## Optiunea 2 — shell one-liner (oriunde, doar `jq` + `base64`)
+## Optiunea 2 — python one-liner (oriunde python3 e disponibil)
 
 ```bash
 CODE='flowchart LR
   A --> B'
-jq -cjn --arg c "$CODE" '{code:$c,mermaid:"{\"theme\":\"default\"}",autoSync:true,updateDiagram:true}' \
-  | base64 | tr '+/' '-_' | tr -d '=\n' \
-  | awk '{print "https://mermaid.wisedigital.tech/view#base64:" $0}'
+
+CODE_INPUT="$CODE" python3 -c '
+import os, json, zlib, base64
+host = os.environ.get("MERMAID_HOST", "mermaid.live")
+state = {"code": os.environ["CODE_INPUT"], "mermaid": "{\"theme\":\"default\"}", "autoSync": True, "updateDiagram": True}
+b64 = base64.urlsafe_b64encode(zlib.compress(json.dumps(state).encode(), 9)).decode().rstrip("=")
+print(f"https://{host}/view#pako:{b64}")
+'
 ```
 
-## Optiunea 3 — python (pentru agenti cu code-exec)
+## Optiunea 3 — python inline (agenti cu code-exec direct)
 
 ```python
-import json, base64
+import os, json, zlib, base64
 state = {"code": code, "mermaid": '{"theme":"default"}', "autoSync": True, "updateDiagram": True}
-b64 = base64.urlsafe_b64encode(json.dumps(state).encode()).decode().rstrip("=")
-url = f"https://mermaid.wisedigital.tech/view#base64:{b64}"
+compressed = zlib.compress(json.dumps(state).encode(), 9)
+b64 = base64.urlsafe_b64encode(compressed).decode().rstrip("=")
+url = f"https://{os.environ.get('MERMAID_HOST', 'mermaid.live')}/view#pako:{b64}"
 ```
 
 ## Verificare
@@ -73,15 +89,19 @@ Asteapta `200`. Daca primesti `503` instanta e jos — anunta-l pe florin.
 ## Limite & gotchas
 
 - **Diagrama traieste in URL.** Daca o pierzi, nu o recuperezi din server. Salveaza codul Mermaid separat (ex. in Obsidian vault).
-- **Pe linkuri foarte lungi** (>2KB) unii clienti (mai ales Slack desktop) pot trunchia. Pentru diagrame mari foloseste prefix `#pako:...` (compresie deflate) — vezi `README.md`.
-- **Pentru editare**: linkul de view nu permite editare. Cine vrea sa modifice, paste-uieste codul intr-un nou tab `/edit` (necesita CF Access).
+- **Linkuri foarte lungi** (>4-8KB chiar si dupa pako) — unii clienti (Slack desktop, anumite gateway-uri email) pot trunchia. Pentru diagrame extreme, salveaza codul si trimite cod + screenshot in loc de URL.
+- **Pentru editare**: linkul de view nu permite editare. Cine vrea sa modifice, paste-uieste codul intr-un nou tab `/edit` (necesita CF Access pe instanta wisedigital).
 - **Verificare sintaxa Mermaid**: scriptul nu valideaza. Daca codul e gresit, editorul afiseaza eroarea inline cand userul deschide URL-ul.
 
 ## Diagram code requirements
 
-- Sintaxa Mermaid 11.x (instanta foloseste imaginea oficiala `latest`)
+- Sintaxa Mermaid 11.x (instanta wisedigital foloseste imaginea oficiala `latest`)
 - Newlines `\n` real, nu literal `\\n`
-- Ghilimele duble in label-uri escape-uite daca treci codul prin JSON (scriptul si one-liner-ul fac asta automat cu `jq --arg`)
+- Ghilimele duble in label-uri escape-uite daca treci codul prin JSON (scriptul si python one-liner-ul fac asta automat prin `json.dumps`)
+
+## Dependente sistem
+
+- `bash`, `python3` (cu `zlib` si `base64` din stdlib — ambele built-in), `curl` pentru verificare. Pe macOS / Linux toate sunt prezente by default.
 
 ## Pentru distributie la alti agenti
 

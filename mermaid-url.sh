@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# Converteste cod Mermaid in URL partajabil pentru mermaid.wisedigital.tech.
-# Stare diagrama = JSON encodat base64url in fragment-ul URL.
+# Converteste cod Mermaid in URL partajabil pentru mermaid-live-editor.
+# Foloseste pako (zlib deflate) ca sa suporte si diagrame lungi.
+#
+# Host configurabil: setezi MERMAID_HOST in env. Default = mermaid.live (public).
+# Pentru instanta wisedigital: export MERMAID_HOST=mermaid.wisedigital.tech
 #
 # Usage:
 #   echo 'flowchart LR\n A --> B' | ./mermaid-url.sh
@@ -9,15 +12,20 @@
 
 set -euo pipefail
 
+HOST="${MERMAID_HOST:-mermaid.live}"
 CODE="${1:-$(cat)}"
 
-STATE=$(jq -cn --arg code "$CODE" '{
-  code: $code,
-  mermaid: "{\"theme\":\"default\"}",
-  autoSync: true,
-  updateDiagram: true
-}')
+PAKO=$(CODE_INPUT="$CODE" python3 - <<'PY'
+import os, json, zlib, base64
+state = {
+    "code": os.environ["CODE_INPUT"],
+    "mermaid": '{"theme":"default"}',
+    "autoSync": True,
+    "updateDiagram": True,
+}
+compressed = zlib.compress(json.dumps(state).encode(), 9)
+print(base64.urlsafe_b64encode(compressed).decode().rstrip("="))
+PY
+)
 
-B64=$(printf '%s' "$STATE" | base64 | tr '+/' '-_' | tr -d '=\n')
-
-echo "https://mermaid.wisedigital.tech/view#base64:${B64}"
+echo "https://${HOST}/view#pako:${PAKO}"

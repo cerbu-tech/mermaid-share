@@ -1,10 +1,21 @@
 # mermaid-share
 
-Skill pentru agenți AI (Claude Code, Codex, Cursor, etc.) care convertește cod Mermaid în URL partajabil prin instanța self-hostată `https://mermaid.wisedigital.tech`. View-urile sunt publice — linkul poate fi dat oricui, fără auth.
+Skill pentru agenți AI (Claude Code, Codex, Cursor, etc.) care convertește cod Mermaid într-un URL partajabil rendabil de orice instanță [mermaid-live-editor](https://github.com/mermaid-js/mermaid-live-editor). View-urile sunt publice — linkul poate fi dat oricui, fără auth.
 
 ## Cum funcționează
 
-Diagrama e encodată JSON → base64url → atașată la fragmentul URL. Server-ul nu stochează nimic; tot ce trebuie pentru render e în link.
+Diagrama e encodată JSON → zlib deflate → base64url → atașată la fragmentul URL (`#pako:...`). Server-ul nu stochează nimic; tot ce trebuie pentru render e în link.
+
+## Configurare host
+
+Setezi `MERMAID_HOST` în shell-ul tău (sau env-ul agentului):
+
+```bash
+export MERMAID_HOST=mermaid.live              # default — instanța oficială publică
+export MERMAID_HOST=mermaid.wisedigital.tech  # instanța internă Wise Digital
+```
+
+Dacă nu setezi nimic, URL-urile sunt generate pentru `mermaid.live` (zero dependență de infra a cuiva).
 
 ## Install
 
@@ -49,7 +60,7 @@ echo 'flowchart LR
   A --> B' | ./mermaid-url.sh
 ```
 
-Așteptat: un URL `https://mermaid.wisedigital.tech/view#base64:...`. Deschide-l în browser → randează diagrama.
+Așteptat: un URL `https://$MERMAID_HOST/view#pako:...`. Deschide-l în browser → randează diagrama.
 
 ```bash
 curl -sI -o /dev/null -w "%{http_code}\n" "$(echo 'flowchart LR; A-->B' | ./mermaid-url.sh)"
@@ -59,11 +70,13 @@ Așteptat: `200`.
 
 ## Dependențe
 
-- `bash`, `jq`, `base64`, `curl` (toate built-in pe macOS; `apt install jq curl` pe Linux dacă lipsesc)
+- `bash`, `python3` (cu `zlib` + `base64` din stdlib), `curl` — toate built-in pe macOS și majoritatea distribuțiilor Linux.
 
 ## Editare
 
-`https://mermaid.wisedigital.tech/edit` cere login Cloudflare Access. Domenii permise: `@wisedigital.tech`. Pentru alți colaboratori, contactați-l pe florin@wisedigital.tech.
+Pe `mermaid.live` (default) oricine poate edita fără auth.
+
+Pe instanțe self-hostate (ex. `mermaid.wisedigital.tech`) editarea poate fi în spatele unui SSO. Pentru instanța Wise Digital: contactează `florin@wisedigital.tech` ca să fii adăugat la policy-ul Cloudflare Access. Generarea linkurilor de view nu necesită niciodată auth.
 
 ## Licență
 
