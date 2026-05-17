@@ -1,21 +1,21 @@
 # mermaid-share
 
-Skill pentru agenți AI (Claude Code, Codex, Cursor, etc.) care convertește cod Mermaid într-un URL partajabil rendabil de orice instanță [mermaid-live-editor](https://github.com/mermaid-js/mermaid-live-editor). View-urile sunt publice — linkul poate fi dat oricui, fără auth.
+A skill for AI agents (Claude Code, Codex, Cursor, etc.) that converts Mermaid code into a shareable URL renderable by any [mermaid-live-editor](https://github.com/mermaid-js/mermaid-live-editor) instance. Views are public — the link can be shared with anyone, no auth required.
 
-## Cum funcționează
+## How it works
 
-Diagrama e encodată JSON → zlib deflate → base64url → atașată la fragmentul URL (`#pako:...`). Server-ul nu stochează nimic; tot ce trebuie pentru render e în link.
+The diagram is encoded as JSON → zlib deflate → base64url → appended to the URL fragment (`#pako:...`). The server stores nothing; everything needed to render the diagram is embedded in the link.
 
-## Configurare host
+## Host configuration
 
-Setezi `MERMAID_HOST` în shell-ul tău (sau env-ul agentului):
+Set `MERMAID_HOST` in your shell (or the agent's environment):
 
 ```bash
-export MERMAID_HOST=mermaid.live              # default — instanța oficială publică
-export MERMAID_HOST=mermaid.wisedigital.tech  # instanța internă Wise Digital
+export MERMAID_HOST=mermaid.live              # default — official public instance
+export MERMAID_HOST=mermaid.wisedigital.tech  # example: your own self-hosted instance
 ```
 
-Dacă nu setezi nimic, URL-urile sunt generate pentru `mermaid.live` (zero dependență de infra a cuiva).
+If you don't set anything, URLs are generated for `mermaid.live` (no dependency on anyone's infrastructure).
 
 ## Install
 
@@ -29,7 +29,7 @@ chmod +x ~/.claude/skills/mermaid-share/mermaid-url.sh
 rm -rf /tmp/mermaid-share
 ```
 
-Restartează Claude Code. Skill-ul `mermaid-share` devine disponibil.
+Restart Claude Code. The `mermaid-share` skill becomes available.
 
 ### Codex CLI (OpenAI)
 
@@ -41,17 +41,17 @@ chmod +x ~/.tools/mermaid-share/mermaid-url.sh
 rm -rf /tmp/mermaid-share
 ```
 
-Adaugă în `AGENTS.md` la rădăcina proiectului:
+Add the following to `AGENTS.md` at the root of your project:
 
 ```markdown
 ## Mermaid diagrams
-Pentru diagrame Mermaid partajabile, urmează `~/.tools/mermaid-share/SKILL.md`.
-Folosește `~/.tools/mermaid-share/mermaid-url.sh` ca encoder.
+For shareable Mermaid diagrams, follow `~/.tools/mermaid-share/SKILL.md`.
+Use `~/.tools/mermaid-share/mermaid-url.sh` as the encoder.
 ```
 
-### Cursor / Continue / alt agent
+### Cursor / Continue / other agents
 
-Adaugă `SKILL.md` ca document de context în setările agentului, sau paste-uiește conținutul lui în system prompt. Scriptul `mermaid-url.sh` îl pui oriunde și-l invoci prin shell.
+Add `SKILL.md` as a context document in your agent's settings, or paste its contents into the system prompt. Place `mermaid-url.sh` anywhere convenient and invoke it via shell.
 
 ## Test
 
@@ -60,24 +60,24 @@ echo 'flowchart LR
   A --> B' | ./mermaid-url.sh
 ```
 
-Așteptat: un URL `https://$MERMAID_HOST/view#pako:...`. Deschide-l în browser → randează diagrama.
+Expected: a URL `https://$MERMAID_HOST/view#pako:...`. Open it in a browser — the diagram renders.
 
 ```bash
 curl -sI -o /dev/null -w "%{http_code}\n" "$(echo 'flowchart LR; A-->B' | ./mermaid-url.sh)"
 ```
 
-Așteptat: `200`.
+Expected: `200`.
 
-## Dependențe
+## Dependencies
 
-- `bash`, `python3` (cu `zlib` + `base64` din stdlib), `curl` — toate built-in pe macOS și majoritatea distribuțiilor Linux.
+- `bash`, `python3` (with `zlib` + `base64` from stdlib), `curl` — all built-in on macOS and most Linux distributions.
 
-## Editare
+## Editing
 
-Pe `mermaid.live` (default) oricine poate edita fără auth.
+On `mermaid.live` (default) anyone can edit without auth.
 
-Pe instanțe self-hostate (ex. `mermaid.wisedigital.tech`) editarea poate fi în spatele unui SSO. Pentru instanța Wise Digital: contactează `florin@wisedigital.tech` ca să fii adăugat la policy-ul Cloudflare Access. Generarea linkurilor de view nu necesită niciodată auth.
+On self-hosted instances (e.g. `mermaid.wisedigital.tech`) editing may be behind SSO. Check your instance's access policy — the maintainer of your deployment can grant edit access. Generating view links never requires auth.
 
-## Licență
+## License
 
-MIT — vezi `LICENSE`.
+MIT — see `LICENSE`.

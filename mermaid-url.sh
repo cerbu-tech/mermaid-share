@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Converteste cod Mermaid in URL partajabil pentru mermaid-live-editor.
-# Foloseste pako (zlib deflate) ca sa suporte si diagrame lungi.
+# Converts Mermaid code into a shareable URL for mermaid-live-editor.
+# Uses pako (zlib deflate) to support long diagrams as well.
 #
-# Host configurabil: setezi MERMAID_HOST in env. Default = mermaid.live (public).
-# Pentru instanta wisedigital: export MERMAID_HOST=mermaid.wisedigital.tech
+# Configurable host: set MERMAID_HOST in env. Default = mermaid.live (public).
+# For a self-hosted instance: export MERMAID_HOST=mermaid.wisedigital.tech
 #
 # Usage:
 #   echo 'flowchart LR\n A --> B' | ./mermaid-url.sh

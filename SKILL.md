@@ -1,57 +1,57 @@
 ---
 name: mermaid-share
-description: Genereaza URL-uri partajabile pentru diagrame Mermaid prin instanta self-hostata mermaid.wisedigital.tech. Folosit cand userul cere o diagrama de partajat (Slack, email, dat altui agent) sau cand ai un cod Mermaid si vrei un link rendabil in browser.
+description: Generates shareable URLs for Mermaid diagrams via a self-hosted or public mermaid-live-editor instance. Use when the user requests a diagram to share (Slack, email, hand off to another agent) or when you have Mermaid code and want a browser-renderable link.
 ---
 
 # Mermaid Share
 
-Toolkit pentru generat link-uri Mermaid partajabile public, fara auth, fara storage.
+Toolkit for generating publicly shareable Mermaid links — no auth, no storage.
 
-## Cand folosesti
+## When to use
 
-- User cere o diagrama vizuala si vrei sa-i dai link, nu cod
-- Trimit un schema unui coleg/client pe Slack/email
-- Pasi unui alt agent (Hermes, Claude, etc.) referinta vizuala la o diagrama deja generata
-- Embed intr-o nota Obsidian sub forma de link in afara de blocul ` ```mermaid `
+- User requests a visual diagram and you want to give them a link, not raw code
+- Sending a diagram to a colleague/client over Slack/email
+- Passing a visual reference to another agent (Claude, Hermes, etc.) for a diagram you already generated
+- Embedding in an Obsidian note as a link outside a ` ```mermaid ` block
 
-## Configurare host
+## Host configuration
 
-Skill-ul scoate URL-uri spre orice instanta de mermaid-live-editor. Setat via env var:
+The skill outputs URLs pointing to any mermaid-live-editor instance. Set via env var:
 
 ```bash
-export MERMAID_HOST=mermaid.live              # default — instanta publica oficiala
-export MERMAID_HOST=mermaid.wisedigital.tech  # instanta wisedigital (intern firma)
+export MERMAID_HOST=mermaid.live              # default — official public instance
+export MERMAID_HOST=mermaid.wisedigital.tech  # example: your own self-hosted instance
 ```
 
-Daca nu setezi nimic, URL-urile pleaca spre `mermaid.live` (zero infra dependency).
+If nothing is set, URLs point to `mermaid.live` (zero infrastructure dependency).
 
 ## Contract
 
-Editorul accepta starea diagramei encodata in fragmentul URL. Doua formate:
+The editor accepts diagram state encoded in the URL fragment. Two formats:
 
-- `#base64:<base64url(JSON state)>` — JSON-ul direct base64-encodat. Merge la diagrame mici, dar **esueaza la diagrame lungi** (Loading URL failed). Suportat doar pentru retro-compat.
-- `#pako:<base64url(zlib.compress(JSON state))>` — JSON-ul zlib-comprimat apoi base64. **Recomandat** — URL-uri ~3-5x mai scurte si suporta diagrame mari.
+- `#base64:<base64url(JSON state)>` — JSON directly base64-encoded. Works for small diagrams, but **fails for long ones** (Loading URL failed). Supported for backwards compatibility only.
+- `#pako:<base64url(zlib.compress(JSON state))>` — JSON zlib-compressed then base64-encoded. **Recommended** — URLs are ~3-5x shorter and support large diagrams.
 
 `JSON state`:
 
 ```json
-{"code":"<cod mermaid>","mermaid":"{\"theme\":\"default\"}","autoSync":true,"updateDiagram":true}
+{"code":"<mermaid code>","mermaid":"{\"theme\":\"default\"}","autoSync":true,"updateDiagram":true}
 ```
 
-`base64url` = base64 standard cu `+/` inlocuit cu `-_`, fara padding `=`.
+`base64url` = standard base64 with `+/` replaced by `-_`, no `=` padding.
 
-`/view` e public. `/edit` (pe instanta wisedigital) e in spatele Cloudflare Access — `@wisedigital.tech`. Linkurile generate aici se deschid in modul view, oricine cu URL-ul le vede.
+`/view` is public. `/edit` (on a self-hosted instance protected by Cloudflare Access) requires authentication. Links generated here open in view mode — anyone with the URL can see them.
 
-## Optiunea 1 — script (recomandat)
+## Option 1 — shell script (recommended)
 
 ```bash
 echo 'flowchart LR
   A --> B' | ./mermaid-url.sh
 ```
 
-Iesire: URL `https://$MERMAID_HOST/view#pako:...` gata de copy/paste.
+Output: URL `https://$MERMAID_HOST/view#pako:...` ready to copy/paste.
 
-## Optiunea 2 — python one-liner (oriunde python3 e disponibil)
+## Option 2 — python one-liner (wherever python3 is available)
 
 ```bash
 CODE='flowchart LR
@@ -66,7 +66,7 @@ print(f"https://{host}/view#pako:{b64}")
 '
 ```
 
-## Optiunea 3 — python inline (agenti cu code-exec direct)
+## Option 3 — python inline (agents with direct code execution)
 
 ```python
 import os, json, zlib, base64
@@ -76,38 +76,38 @@ b64 = base64.urlsafe_b64encode(compressed).decode().rstrip("=")
 url = f"https://{os.environ.get('MERMAID_HOST', 'mermaid.live')}/view#pako:{b64}"
 ```
 
-## Verificare
+## Verification
 
-Dupa generare, valideaza ca URL-ul raspunde:
+After generating, validate that the URL responds:
 
 ```bash
 curl -sI -o /dev/null -w "%{http_code}\n" "$URL"
 ```
 
-Asteapta `200`. Daca primesti `503` instanta e jos — anunta-l pe florin.
+Expect `200`. If you get `503`, the instance is down — notify the maintainer.
 
-## Limite & gotchas
+## Limits & gotchas
 
-- **Diagrama traieste in URL.** Daca o pierzi, nu o recuperezi din server. Salveaza codul Mermaid separat (ex. in Obsidian vault).
-- **Linkuri foarte lungi** (>4-8KB chiar si dupa pako) — unii clienti (Slack desktop, anumite gateway-uri email) pot trunchia. Pentru diagrame extreme, salveaza codul si trimite cod + screenshot in loc de URL.
-- **URL lung in markdown link `[text](url)`** — render-ul / parsing-ul intermediar poate corupe URL-uri >1-2KB (caractere `-_` din base64url, paranteze imbricate). Pentru diagrame mari, posteaza URL-ul ca **code block** (` ``` `) sau text simplu, nu ca markdown link.
-- **Pentru editare**: linkul de view nu permite editare. Cine vrea sa modifice, paste-uieste codul intr-un nou tab `/edit` (necesita CF Access pe instanta wisedigital).
-- **Verificare sintaxa Mermaid**: scriptul nu valideaza. Daca codul e gresit, editorul afiseaza eroarea inline cand userul deschide URL-ul.
+- **The diagram lives in the URL.** If you lose it, there is nothing to recover from the server. Save the Mermaid source separately (e.g. in your Obsidian vault or a local file).
+- **Very long links** (>4-8 KB even after pako) — some clients (Slack desktop, certain email gateways) may truncate. For extremely large diagrams, save the source and send code + screenshot instead of a URL.
+- **Long URL inside a markdown link `[text](url)`** — intermediate renderers / parsers can corrupt URLs >1-2 KB (the `-_` characters from base64url, nested parentheses). For large diagrams, post the URL as a **code block** (` ``` `) or plain text, not as a markdown link.
+- **For editing**: the view link does not allow editing. Anyone who wants to modify the diagram should paste the code into a new `/edit` tab (requires CF Access on self-hosted instances).
+- **Mermaid syntax validation**: the script does not validate syntax. If the code is malformed, the editor displays the error inline when the user opens the URL.
 
 ## Diagram code requirements
 
-- Sintaxa Mermaid 11.x (instanta wisedigital foloseste imaginea oficiala `latest`)
-- Newlines `\n` real, nu literal `\\n`
-- Ghilimele duble in label-uri escape-uite daca treci codul prin JSON (scriptul si python one-liner-ul fac asta automat prin `json.dumps`)
+- Mermaid 11.x syntax (the official `latest` Docker image)
+- Real newlines `\n`, not the literal string `\\n`
+- Double quotes inside labels must be escaped if the code is passed through JSON (the shell script and python one-liner handle this automatically via `json.dumps`)
 
-## Dependente sistem
+## System dependencies
 
-- `bash`, `python3` (cu `zlib` si `base64` din stdlib — ambele built-in), `curl` pentru verificare. Pe macOS / Linux toate sunt prezente by default.
+- `bash`, `python3` (with `zlib` and `base64` from stdlib — both built-in), `curl` for verification. All are present by default on macOS / Linux.
 
-## Pentru distributie la alti agenti
+## Distributing to other agents
 
-Acest folder (`wise-infra/mermaid/`) e self-contained. Pentru a transfera skill-ul:
+This folder (`wise-infra/mermaid/`) is self-contained. To transfer the skill:
 
-- **Pe alt agent local (ex. Hermes pe Legion):** copiaza `SKILL.md` + `mermaid-url.sh` in folderul de skills al agentului. Necesar pe sistem: `bash`, `jq`, `base64`, `curl`.
-- **Pentru agent fara filesystem:** paste-uieste continutul `SKILL.md` direct in context-ul lui ca system/tool description.
-- **Update-uri:** orice schimbare de domeniu sau policy se face aici; sincronizarea la Hermes se face prin pull manual sau sync explicit.
+- **To another local agent:** copy `SKILL.md` + `mermaid-url.sh` into that agent's skills folder. Required on the target system: `bash`, `jq`, `base64`, `curl`.
+- **For an agent without filesystem access:** paste the contents of `SKILL.md` directly into its context as a system/tool description.
+- **Updates:** any domain or policy changes are made here; sync to your agents via a manual pull or explicit sync step.
