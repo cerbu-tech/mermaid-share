@@ -85,6 +85,30 @@ echo 'flowchart LR
 
 Output: URL `https://$MERMAID_HOST/view#pako:...` ready to copy/paste.
 
+### `--short` mode (recommended for agents posting URLs back to users)
+
+If a shortener service is available, the agent can hand off a small URL the user can paste without risk of corruption:
+
+```bash
+export SHORTENER_URL=https://s.example.com/create   # POST endpoint
+export SHORTENER_TOKEN=<bearer token>
+echo '...' | ./mermaid-url.sh --short
+# → https://s.example.com/abc123
+```
+
+The shortener must accept a POST `{"url": "..."}` body with `Authorization: Bearer $TOKEN` and return JSON `{"short": "https://..."}` or `{"slug": "abc"}`. A reference implementation (Cloudflare Worker + KV) ships in this repo's sibling `shortener-worker/` folder, or you can use any existing shortener API that fits this contract.
+
+**Why it matters for agents**: long pako-encoded URLs (>1 KB) printed back into chat risk being reproduced verbatim by the LLM in later responses — a single character drift corrupts the diagram. A 30-char short URL is reliably reproducible and survives every markdown renderer.
+
+### `--open` mode (alternative for desktop sessions)
+
+```bash
+echo '...' | ./mermaid-url.sh --open
+# or: MERMAID_OPEN=1 ./mermaid-url.sh < diagram.mmd
+```
+
+Opens the URL in the user's default browser and copies it to the clipboard (`pbcopy` on macOS, `wl-copy` / `xclip` on Linux). The script prints only a confirmation, not the URL itself. Useful when no shortener is set up but the user is on the same desktop as the agent.
+
 ## Option 2 — python one-liner (wherever python3 is available)
 
 ```bash
