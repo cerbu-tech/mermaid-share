@@ -3,7 +3,7 @@
 # Uses pako (zlib deflate) to support long diagrams as well.
 #
 # Configurable host: set MERMAID_HOST in env. Default = mermaid.live (public).
-# For a self-hosted instance: export MERMAID_HOST=mermaid.wisedigital.tech
+# For a self-hosted instance: export MERMAID_HOST=mermaid.example.com
 #
 # Configurable theme: set MERMAID_THEME in env. Default = dark.
 # Valid values: default, dark, neutral, forest.

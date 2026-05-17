@@ -20,7 +20,7 @@ The skill outputs URLs pointing to any mermaid-live-editor instance. Set via env
 
 ```bash
 export MERMAID_HOST=mermaid.live              # default — official public instance
-export MERMAID_HOST=mermaid.wisedigital.tech  # example: your own self-hosted instance
+export MERMAID_HOST=mermaid.example.com       # example: your own self-hosted instance
 ```
 
 If nothing is set, URLs point to `mermaid.live` (zero infrastructure dependency).

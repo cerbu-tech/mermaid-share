@@ -12,7 +12,7 @@ Set `MERMAID_HOST` in your shell (or the agent's environment):
 
 ```bash
 export MERMAID_HOST=mermaid.live              # default — official public instance
-export MERMAID_HOST=mermaid.wisedigital.tech  # example: your own self-hosted instance
+export MERMAID_HOST=mermaid.example.com       # example: your own self-hosted instance
 ```
 
 If you don't set anything, URLs are generated for `mermaid.live` (no dependency on anyone's infrastructure).
@@ -33,7 +33,7 @@ For category-coded diagrams on dark theme, see `SKILL.md` for a recommended low-
 
 ```bash
 mkdir -p ~/.claude/skills/mermaid-share
-git clone https://github.com/wisedigital/mermaid-share.git /tmp/mermaid-share
+git clone https://github.com/cerbu-tech/mermaid-share.git /tmp/mermaid-share
 cp /tmp/mermaid-share/{SKILL.md,mermaid-url.sh} ~/.claude/skills/mermaid-share/
 chmod +x ~/.claude/skills/mermaid-share/mermaid-url.sh
 rm -rf /tmp/mermaid-share
@@ -45,7 +45,7 @@ Restart Claude Code. The `mermaid-share` skill becomes available.
 
 ```bash
 mkdir -p ~/.tools/mermaid-share
-git clone https://github.com/wisedigital/mermaid-share.git /tmp/mermaid-share
+git clone https://github.com/cerbu-tech/mermaid-share.git /tmp/mermaid-share
 cp /tmp/mermaid-share/{SKILL.md,mermaid-url.sh} ~/.tools/mermaid-share/
 chmod +x ~/.tools/mermaid-share/mermaid-url.sh
 rm -rf /tmp/mermaid-share
@@ -86,7 +86,7 @@ Expected: `200`.
 
 On `mermaid.live` (default) anyone can edit without auth.
 
-On self-hosted instances (e.g. `mermaid.wisedigital.tech`) editing may be behind SSO. Check your instance's access policy — the maintainer of your deployment can grant edit access. Generating view links never requires auth.
+On self-hosted instances editing may be behind SSO or another access gate. Check your instance's policy — the maintainer of your deployment can grant edit access. Generating view links never requires auth.
 
 ## License
 
