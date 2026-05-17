@@ -90,6 +90,7 @@ Asteapta `200`. Daca primesti `503` instanta e jos — anunta-l pe florin.
 
 - **Diagrama traieste in URL.** Daca o pierzi, nu o recuperezi din server. Salveaza codul Mermaid separat (ex. in Obsidian vault).
 - **Linkuri foarte lungi** (>4-8KB chiar si dupa pako) — unii clienti (Slack desktop, anumite gateway-uri email) pot trunchia. Pentru diagrame extreme, salveaza codul si trimite cod + screenshot in loc de URL.
+- **URL lung in markdown link `[text](url)`** — render-ul / parsing-ul intermediar poate corupe URL-uri >1-2KB (caractere `-_` din base64url, paranteze imbricate). Pentru diagrame mari, posteaza URL-ul ca **code block** (` ``` `) sau text simplu, nu ca markdown link.
 - **Pentru editare**: linkul de view nu permite editare. Cine vrea sa modifice, paste-uieste codul intr-un nou tab `/edit` (necesita CF Access pe instanta wisedigital).
 - **Verificare sintaxa Mermaid**: scriptul nu valideaza. Daca codul e gresit, editorul afiseaza eroarea inline cand userul deschide URL-ul.
 
