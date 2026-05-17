@@ -1,6 +1,7 @@
 ---
 name: mermaid-share
-description: Generates shareable URLs for Mermaid diagrams via a self-hosted or public mermaid-live-editor instance. Use when the user requests a diagram to share (Slack, email, hand off to another agent) or when you have Mermaid code and want a browser-renderable link.
+description: |
+  Generate a shareable, browser-renderable URL for any Mermaid diagram (flowchart, sequence, class, ER, state, gantt, mindmap, architecture, etc.) instead of returning raw Mermaid code blocks. INVOKE WHENEVER the user asks to see, draw, visualize, sketch, render, share, or hand off a diagram in any form — including phrases like "draw a flow", "show me a diagram", "make a flowchart", "visualize this", "architecture diagram", "sequence diagram", "fa o diagrama", "deseneaza", "vizualizeaza", "schita", "arata-mi grafic". Also invoke when you were about to output a ` ```mermaid ` code block — render it via this skill so the user gets a clickable link, not raw text. The skill works with the public mermaid.live by default or any self-hosted mermaid-live-editor instance via MERMAID_HOST.
 ---
 
 # Mermaid Share

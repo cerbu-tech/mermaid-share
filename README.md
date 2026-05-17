@@ -27,41 +27,32 @@ export MERMAID_THEME=default   # classic light theme
 
 For category-coded diagrams on dark theme, see `SKILL.md` for a recommended low-contrast palette (VS Code dark inspired) — bright pastel fills clash with the dark theme's default text color.
 
-## Install
+## Install — instructions for the AI agent
 
-### Claude Code
+If a user gave you this repo URL and asked you to install the skill, do the following yourself:
 
-```bash
-mkdir -p ~/.claude/skills/mermaid-share
-git clone https://github.com/cerbu-tech/mermaid-share.git /tmp/mermaid-share
-cp /tmp/mermaid-share/{SKILL.md,mermaid-url.sh} ~/.claude/skills/mermaid-share/
-chmod +x ~/.claude/skills/mermaid-share/mermaid-url.sh
-rm -rf /tmp/mermaid-share
-```
+1. Detect the host agent by environment markers:
+   - **Claude Code** → `~/.claude/skills/mermaid-share/`
+   - **Codex CLI** (OpenAI) → `~/.tools/mermaid-share/` plus an entry in the project's `AGENTS.md`
+   - **Cursor / Continue / Aider / other** → any stable path you can reference; add a pointer in the project's agent config or system prompt
+   - Unknown → ask the user where their agent loads skills from
 
-Restart Claude Code. The `mermaid-share` skill becomes available.
+2. Download `SKILL.md` and `mermaid-url.sh`:
+   ```bash
+   DEST=~/.claude/skills/mermaid-share        # adjust per agent
+   mkdir -p "$DEST"
+   curl -fsSL https://raw.githubusercontent.com/cerbu-tech/mermaid-share/main/SKILL.md       -o "$DEST/SKILL.md"
+   curl -fsSL https://raw.githubusercontent.com/cerbu-tech/mermaid-share/main/mermaid-url.sh -o "$DEST/mermaid-url.sh"
+   chmod +x "$DEST/mermaid-url.sh"
+   ```
 
-### Codex CLI (OpenAI)
+3. Smoke-test:
+   ```bash
+   echo 'flowchart LR; A-->B' | "$DEST/mermaid-url.sh"
+   ```
+   Expect a `https://...#pako:...` URL on stdout.
 
-```bash
-mkdir -p ~/.tools/mermaid-share
-git clone https://github.com/cerbu-tech/mermaid-share.git /tmp/mermaid-share
-cp /tmp/mermaid-share/{SKILL.md,mermaid-url.sh} ~/.tools/mermaid-share/
-chmod +x ~/.tools/mermaid-share/mermaid-url.sh
-rm -rf /tmp/mermaid-share
-```
-
-Add the following to `AGENTS.md` at the root of your project:
-
-```markdown
-## Mermaid diagrams
-For shareable Mermaid diagrams, follow `~/.tools/mermaid-share/SKILL.md`.
-Use `~/.tools/mermaid-share/mermaid-url.sh` as the encoder.
-```
-
-### Cursor / Continue / other agents
-
-Add `SKILL.md` as a context document in your agent's settings, or paste its contents into the system prompt. Place `mermaid-url.sh` anywhere convenient and invoke it via shell.
+4. Tell the user it is installed and what to set if they want a self-hosted instance or shortener (`MERMAID_HOST`, `SHORTENER_URL`, `SHORTENER_TOKEN`). After the install you may need a restart of the agent for it to pick up the new skill.
 
 ## Test
 
