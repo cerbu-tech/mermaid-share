@@ -25,6 +25,40 @@ export MERMAID_HOST=mermaid.wisedigital.tech  # example: your own self-hosted in
 
 If nothing is set, URLs point to `mermaid.live` (zero infrastructure dependency).
 
+## Theme configuration
+
+Default theme is `dark` (legible on dark backgrounds, the most common reader context today). Override via env var:
+
+```bash
+export MERMAID_THEME=dark      # default
+export MERMAID_THEME=default   # classic light theme
+export MERMAID_THEME=neutral
+export MERMAID_THEME=forest
+```
+
+### Recommended dark palette for category-coded diagrams
+
+When using `style <node> fill:#hex` overrides inside a `dark` theme, use **muted, low-saturation tints** (VS Code dark inspired). Bright pastel fills (`#ffe0e0`, `#e0f0ff`) clash with dark text rendered by the dark theme. Suggested categories:
+
+| Category    | Fill        | Stroke      | Use case                |
+|-------------|-------------|-------------|-------------------------|
+| Neutral/current | `#2d2d2d` | `#5a5a5a` | Baseline, "as-is" state |
+| Info/option-A | `#1e3a52` | `#3a6a8a`   | Cool/blue alternative   |
+| Success/option-B | `#1f3a2a` | `#3a6a4a` | Green alternative       |
+| Warning/decision | `#3d3019` | `#7a5a2a` | Highlight / decision    |
+| Danger      | `#3a1e1e`   | `#6a3a3a`   | Removed / problem       |
+
+Example:
+
+```
+style Current fill:#2d2d2d,stroke:#5a5a5a,color:#d4d4d4
+style OptionA fill:#1e3a52,stroke:#3a6a8a,color:#d4d4d4
+style OptionB fill:#1f3a2a,stroke:#3a6a4a,color:#d4d4d4
+style Decision fill:#3d3019,stroke:#7a5a2a,color:#e6c074
+```
+
+Always pair `fill` with an explicit `color:` so the label stays legible regardless of the theme's default text color.
+
 ## Contract
 
 The editor accepts diagram state encoded in the URL fragment. Two formats:

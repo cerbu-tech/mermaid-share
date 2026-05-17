@@ -17,6 +17,16 @@ export MERMAID_HOST=mermaid.wisedigital.tech  # example: your own self-hosted in
 
 If you don't set anything, URLs are generated for `mermaid.live` (no dependency on anyone's infrastructure).
 
+## Theme
+
+Default theme is `dark`. Override via `MERMAID_THEME` env var (`default`, `dark`, `neutral`, `forest`).
+
+```bash
+export MERMAID_THEME=default   # classic light theme
+```
+
+For category-coded diagrams on dark theme, see `SKILL.md` for a recommended low-contrast palette (VS Code dark inspired) — bright pastel fills clash with the dark theme's default text color.
+
 ## Install
 
 ### Claude Code
